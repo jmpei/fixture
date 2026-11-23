@@ -2,26 +2,41 @@
 export type Match = { home: string; away: string };
 export type Round = Match[];
 
+/** An empty seat: whoever is paired with it sits out that round. */
+const BYE = null;
+type Seat = string | typeof BYE;
+
 export function roundRobin(teamIds: string[]): Round[] {
   if (teamIds.length < 2) return [];
-  // With an odd count, a fixed empty seat at index 0 gives each team one bye.
-  const seats: (string | null)[] = teamIds.length % 2 === 0 ? [...teamIds] : [null, ...teamIds];
+  // With an odd count, a fixed bye in the first seat gives each team exactly one bye
+  // and keeps every real team on the rotating seats, which balances home and away.
+  const seats: Seat[] = teamIds.length % 2 === 0 ? [...teamIds] : [BYE, ...teamIds];
   const n = seats.length;
-  const rounds: Round[] = [];
 
-  for (let r = 0; r < n - 1; r++) {
-    const round: Round = [];
-    for (let i = 0; i < n / 2; i++) {
-      const left = seats[i];
-      const right = seats[n - 1 - i];
-      if (left === null || right === null) continue;
-      // The fixed seat alternates home and away; the others are home on the left half.
-      const leftIsHome = i === 0 ? r % 2 === 0 : true;
-      round.push(leftIsHome ? { home: left, away: right } : { home: right, away: left });
-    }
-    rounds.push(round);
-    // Rotate every seat except the first one step clockwise.
-    seats.splice(1, 0, seats.pop()!);
+  return Array.from({ length: n - 1 }, (_, r) => {
+    const round = pairSeats(seats, r);
+    rotate(seats);
+    return round;
+  });
+}
+
+/** Pairs seat i with seat n-1-i. The first seat alternates home and away by round; the
+ * others are home while on the left half, and each team spends equal time on each half. */
+function pairSeats(seats: Seat[], roundIndex: number): Round {
+  const n = seats.length;
+  const round: Round = [];
+  for (let i = 0; i < n / 2; i++) {
+    const left = seats[i];
+    const right = seats[n - 1 - i];
+    if (left === BYE || right === BYE) continue;
+    const leftIsHome = i > 0 || roundIndex % 2 === 0;
+    round.push(leftIsHome ? { home: left, away: right } : { home: right, away: left });
   }
-  return rounds;
+  return round;
+}
+
+/** Keeps the first seat fixed and moves every other seat one step clockwise. */
+function rotate(seats: Seat[]): void {
+  const last = seats.pop();
+  if (last !== undefined) seats.splice(1, 0, last);
 }
