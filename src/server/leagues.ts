@@ -60,3 +60,7 @@ export async function getLeagueSetup(leagueId: string) {
     },
   });
 }
+
+export async function getLeague(leagueId: string) {
+  return prisma.league.findUnique({ where: { id: leagueId } });
+}
