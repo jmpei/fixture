@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run *)",
+      "Bash(npm test *)",
+      "Bash(npx vitest *)",
+      "Bash(npx playwright test *)",
+      "Bash(npx prisma generate)",
+      "Bash(npx prisma migrate dev *)",
+      "Bash(npx tsc --noEmit)",
+      "Bash(docker compose *)",
+      "Bash(git status *)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git switch *)",
+      "Bash(git worktree *)"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Edit(./.env)",
+      "Edit(./.env.*)",
+      "Edit(./prisma/migrations/**)",
+      "Bash(git push *)",
+      "Bash(git reset --hard *)",
+      "Bash(npx prisma migrate reset *)",
+      "Bash(rm -rf *)"
+    ]
+  }
+}
