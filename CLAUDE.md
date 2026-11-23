@@ -21,7 +21,8 @@ Fixture schedules university intramural leagues. A coordinator sets up divisions
 | One test file | `npx vitest run tests/unit/round-robin.test.ts` |
 | One test by name | `npx vitest run -t "pairs every team with every other team once"` |
 | E2E tests (starts or reuses the dev server) | `npm run test:e2e` |
-| Local database | `docker compose up -d db` (host port 5434) |
+| Local database | `docker compose up -d db` (host port 5434); first time: `cp .env.example .env`, create `fixture_test`, then `npm run db:migrate` |
+| Migrate the test database | `DATABASE_URL=<TEST_DATABASE_URL> npx prisma migrate deploy` |
 
 ## Stack
 
@@ -29,7 +30,7 @@ Fixture schedules university intramural leagues. A coordinator sets up divisions
 |---|---|
 | Framework | Next.js 16.4.6, App Router, React 19.3, TypeScript strict |
 | Styling | Tailwind CSS v4 through the Turbopack loader in `next.config.ts` (no `tailwind.config`) |
-| Database | PostgreSQL 17 (Docker locally, Neon in production) through Prisma 7 |
+| Database | PostgreSQL 17 (Docker locally, Neon in production) through Prisma 7.10.1 with `@prisma/adapter-pg` |
 | Dates | `date-fns` 4 with `@date-fns/tz` |
 | Validation | zod |
 | Tests | Vitest (unit and integration), Playwright (E2E) |
@@ -53,7 +54,11 @@ Fixture schedules university intramural leagues. A coordinator sets up divisions
 - Name a domain file and its test after what it does: `src/domain/round-robin.ts` and `tests/unit/round-robin.test.ts`.
 - Teams are referred to by ID inside `src/domain/`; names are looked up only for display.
 - Before writing Next.js code, read the matching guide in `node_modules/next/dist/docs/` (this version differs from older Next.js).
-- Cache Components is on: wrap any component that reads the database or `searchParams` in `<Suspense>`.
+- Cache Components is on: wrap any component that reads the database, `params` or `searchParams` in `<Suspense>`, and call `refresh()` from `next/cache` at the end of a Server Action that changes data.
+- Forms for Server Actions use `ActionForm` (`src/app/action-form.tsx`): it submits from `onSubmit` so React 19 doesn't reset a rejected entry, and remounts empty after a save.
+- Server Actions throw `LeagueInputError` (from `src/server/`) for messages the user may see; anything else is a bug and is rethrown.
+- In E2E tests, wait for `networkidle` before typing: before hydration a form posts natively and comes back with server defaults.
+- tzdata 2026e moved `America/Vancouver` to permanent UTC-7 on 2026-03-08, so tests must not assume PST.
 
 ## Testing strategy
 
