@@ -8,8 +8,8 @@ Explore findings that shape the plan:
 - Next 16.4.6 with `cacheComponents: true`: a dynamic route's `params` is runtime data, so the page must read it inside `<Suspense>` (`node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/dynamic-routes.md`, "With Cache Components"). Same for DB reads.
 - After a mutating Server Action, call `refresh()` from `next/cache`; `redirect()` throws, so nothing after it runs (`01-getting-started/07-mutating-data.md`).
 - Server Actions are public POST endpoints: each validates its own input with zod.
-- React 19 resets a `<form action>` after the action; forms that must keep values on error submit from `onSubmit` with `startTransition(() => action(data))` (lesson from the ShiftSafe prototype, `Project 3/shiftsafe/src/app/schedule/add-shift-form.tsx`).
-- Prisma 7 needs `@prisma/adapter-pg` and `prisma.config.ts`; `Project 3/shiftsafe/` (`prisma.config.ts`, `src/server/db.ts`, `tests/integration/setup.ts`) has a working pattern to copy. Local wall-clock → UTC conversion: reuse `localDateTime` from `shiftsafe/src/domain/week.ts`.
+- React 19 resets a `<form action>` after the action; forms that must keep values on error submit from `onSubmit` with `startTransition(() => action(data))` (lesson from an earlier project).
+- Prisma 7 needs `@prisma/adapter-pg` and `prisma.config.ts`; an earlier project's `prisma.config.ts`, `src/server/db.ts` and `tests/integration/setup.ts` are a working pattern to copy. Local wall-clock → UTC conversion: reuse its `localDateTime`.
 
 ## Scope
 
@@ -20,10 +20,10 @@ Out (later stories): teams and blackout dates (story 2), generation (3), auth an
 
 | File | Change |
 |---|---|
-| `package.json` | add `prisma`, `@prisma/client`, `@prisma/adapter-pg` 7.10.1; scripts `db:migrate`, `postinstall: prisma generate`; `overrides.effect` 3.22.5 (audit fix found in ShiftSafe) |
-| `prisma.config.ts`, `src/server/db.ts`, `tests/integration/setup.ts`, `.env.example` | copied from ShiftSafe; DB URLs on port 5434 |
+| `package.json` | add `prisma`, `@prisma/client`, `@prisma/adapter-pg` 7.10.1; scripts `db:migrate`, `postinstall: prisma generate`; `overrides.effect` 3.22.5 (fixes the `effect` advisory under Prisma's config) |
+| `prisma.config.ts`, `src/server/db.ts`, `tests/integration/setup.ts`, `.env.example` | copied from the earlier project; DB URLs on port 5434 |
 | `prisma/schema.prisma` | `League { id, name, timeZone @default("America/Vancouver") }`, `Division { leagueId, name }`, `Venue { leagueId, name }`, `TimeSlot { venueId, startsAt, endsAt }` with index `(venueId, startsAt)`; cascade deletes |
-| `src/domain/local-time.ts` | `localDateTime(date, time, tz)` copied from ShiftSafe, with its unit tests |
+| `src/domain/local-time.ts` | `localDateTime(date, time, tz)` copied from the earlier project, with unit tests |
 | `src/server/leagues.ts` | `createLeague`, `addDivision`, `addVenue`, `addTimeSlot` (zod; end after start; venue belongs to the league; overlap check `startsAt < newEnd AND endsAt > newStart` inside a transaction), `getLeagueSetup(leagueId)`; `LeagueInputError` for user-facing messages |
 | `src/app/leagues/new/page.tsx` + action | form for name → `createLeague` → `redirect` to the setup page |
 | `src/app/leagues/[leagueId]/page.tsx` | `<Suspense>` around a component that awaits `params` and shows divisions, venues, and slots grouped by venue in local time |
