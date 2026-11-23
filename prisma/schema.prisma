@@ -1,0 +1,50 @@
+// Fixture data model. Timestamps are UTC; each league carries the time zone its dates are in.
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model League {
+  id        String     @id @default(cuid())
+  name      String
+  timeZone  String     @default("America/Vancouver")
+  createdAt DateTime   @default(now())
+  divisions Division[]
+  venues    Venue[]
+}
+
+model Division {
+  id        String   @id @default(cuid())
+  leagueId  String
+  league    League   @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  name      String
+  createdAt DateTime @default(now())
+
+  @@index([leagueId])
+}
+
+model Venue {
+  id        String     @id @default(cuid())
+  leagueId  String
+  league    League     @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  name      String
+  createdAt DateTime   @default(now())
+  timeSlots TimeSlot[]
+
+  @@index([leagueId])
+}
+
+model TimeSlot {
+  id        String   @id @default(cuid())
+  venueId   String
+  venue     Venue    @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  startsAt  DateTime
+  endsAt    DateTime
+  createdAt DateTime @default(now())
+
+  @@index([venueId, startsAt])
+}
